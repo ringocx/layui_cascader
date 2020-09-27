@@ -1,0 +1,142 @@
+.layui-rc-cascader {
+  position: relative;
+  font-size: 14px;
+  line-height: 40px;
+}
+
+.cascader-input {
+  cursor: pointer;
+  position: relative;
+  width: 100%;
+}
+
+.cascader-input > input {
+  cursor: pointer;
+  user-select:none;
+}
+
+.cascader-input__inner {
+  text-overflow: ellipsis;
+}
+
+.cascader-input--suffix > .cascader-input__inner {
+  padding-right: 32px;
+}
+
+.cascader-input.focus .cascader-input__inner {
+  border-color: #5FB878 !important;
+}
+
+.cascader-input__suffix {
+  position: absolute;
+  width: 36px;
+  height: 100%;
+  right: 0;
+  top: 0;
+  text-align: center;
+  color: #c0c4cc;
+  transition: all .3s;
+  pointer-events: none;
+  cursor: pointer;
+}
+
+.cascader-input.focus .cascader-input__suffix {
+  transform: rotate(180deg);
+}
+
+.cascader-dropdown {
+  display: none;
+  position: absolute;
+  left: 0;
+  top: 42px;
+  padding: 5px 0;
+  z-index: 899;
+}
+
+.layui-selectup .cascader-dropdown {
+  top: auto;
+  bottom: 42px;
+}
+
+.cascader-input.focus + .cascader-dropdown {
+  display: block;
+}
+
+.cascader-dropdown > .cascader-dropdown-panel {
+  display: flex;
+  flex-flow: row;
+  border: 1px solid #d2d2d2;
+  background-color: #fff;
+  border-radius: 2px;
+  box-shadow: 0 2px 4px rgba(0,0,0,.12);
+  box-sizing: border-box;
+}
+
+.cascader-dropdown-panel > .cascader-dropdown-dl {
+  min-width: 180px;
+  min-height: 180px;
+  max-height: 300px;
+  overflow-y: auto;
+  box-sizing: border-box;
+  color: #606266;
+  border-right: 1px solid #d2d2d2;
+}
+
+.cascader-dropdown-dl {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.cascader-dropdown-dl::-webkit-scrollbar {
+  display: none;
+}
+
+.cascader-dropdown-dl:last-child {
+  border-right: none;
+}
+
+.cascader-dropdown-dd {
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  height: 40px;
+  line-height: 40px;
+  outline: none;
+  color: #606266;
+  user-select: none;
+}
+
+.cascader-dropdown-dd:hover {
+  transition: .5s all;
+  background-color: #f2f2f2;
+}
+
+.cascader-dropdown-dd.active, .cascader-dropdown-dd.in-active{
+  background-color: #5FB878;
+  color: #fff;
+}
+
+.cascader-dropdown-dd > span {
+  flex: 1;
+  padding-right: 16px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cascader-dropdown-dd.selected {
+  color: #5FB878;
+  font-weight: 600;
+}
+
+.cascader-dropdown-dd .layui-icon-ok {
+  display: none;
+}
+
+.cascader-dropdown-dd.selected .layui-icon-ok {
+  display: inline-block;
+}
