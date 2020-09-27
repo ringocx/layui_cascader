@@ -12,6 +12,9 @@ layui.define(['jquery', 'laytpl'], function (e) {
       input: 'cascader-input__inner',
       inputSuffix: 'cascader-input__suffix',
       tags: 'cascader-tags',
+      tagBody: 'cascader-tags-body',
+      tagItem: 'cascader-tags-item',
+      tagNum: 'cascader-tags-num',
       dropdown: 'cascader-dropdown',
       dropdownPanel: 'cascader-dropdown-panel',
       dropdownDl: 'cascader-dropdown-dl',
@@ -19,8 +22,10 @@ layui.define(['jquery', 'laytpl'], function (e) {
       selectup: 'layui-selectup'
     },
     template: {
-      main: '<div class="{{d.cls.container}}"><div class="{{d.cls.inputBox}} cascader-input--suffix"><input type="text" readonly placeholder="{{d.opts.placeholder}}" class="{{d.cls.input}} layui-input" /><span class="{{d.cls.inputSuffix}} layui-icon layui-icon-triangle-d"></span></div><div class="{{d.cls.dropdown}} layui-anim layui-anim-upbit"><div class="{{d.cls.dropdownPanel}}"></div></div>{{# if (d.opts.multiple) { }}<div class="{{d.cls.tags}}"></div>{{# } }}</div>',
+      main: '<div class="{{d.cls.container}}"><div class="{{d.cls.inputBox}} cascader-input--suffix"><input type="text" readonly placeholder="{{d.opts.placeholder}}" class="{{d.cls.input}} layui-input" /><span class="{{d.cls.inputSuffix}}"><i class="layui-icon layui-icon-triangle-d"></i></span></div><div class="{{d.cls.dropdown}} layui-anim layui-anim-upbit"><div class="{{d.cls.dropdownPanel}}"></div></div>{{# if (d.opts.multiple) { }}<div class="{{d.cls.tags}}"><div class="{{d.cls.tagBody}}"></div></div>{{# } }}</div>',
       dropdownDl: '<div class="{{d.cls.dropdownDl}}">{{# layui.each(d.list, function(i, e){ }}<div class="{{d.cls.dropdownDd}}" data-v="{{e.value}}"><span>{{e.label}}</span>{{# if (e.children.length > 0) { }}<i class="layui-icon layui-icon-right"></i>{{# } }}<i class="layui-icon layui-icon-ok"></i></div>{{# }); }}</div>',
+      tags: '{{# layui.each(d.list, function (i, e) { }}<div class="{{d.cls.tagItem}}" data-v="{{e.value}}"><span>{{ e.label }}</span><i class="layui-icon layui-icon-close-fill"></i></div>{{# }); }}',
+      tagsCollapse: '<div class="{{d.cls.tagItem}}" data-v="{{d.list[0].value}}"><span>{{d.list[0].label}}</span><i class="layui-icon layui-icon-close-fill"></i></div><div class="{{d.cls.tagItem}} {{d.cls.tagNum}}">+{{d.list.length}}</div>'
     }
   };
 
@@ -37,7 +42,7 @@ layui.define(['jquery', 'laytpl'], function (e) {
     options: [],
     multiple: false,
     clearable: false,
-    collapseTags: false,
+    collapseTags: true,
     filterable: false,
     showAllLevels: true,
     placeholder: '请选择',
@@ -54,7 +59,7 @@ layui.define(['jquery', 'laytpl'], function (e) {
 
   Cascader.prototype.render = function () {
     var _s = this, _e = this.config.elem;
-    $(_e).hide().after(tpl(sys.template.main).render({ cls: sys.class, opts: _s.config }));
+    $(_e).parent().find(`.${sys.class.container}`).remove(), $(_e).hide().after(tpl(sys.template.main).render({ cls: sys.class, opts: _s.config }));
     _s.renderData([]), _s.eventRegister();
   }
 
@@ -62,6 +67,10 @@ layui.define(['jquery', 'laytpl'], function (e) {
     var _s = this, _e = _s.config.elem, _cls = sys.class, $c = $(_e).next();
 
     $c.find(`.${_cls.inputBox}`).on('click', _s.onShow.bind(_s));
+
+    $c.find(`.${_cls.tags}`).on('click', _s.onShow.bind(_s));
+
+    $c.find(`.${_cls.tags}`).on('click', `.${_cls.tagItem} > i`, function (e) { e.stopPropagation(); _s.onTagTap.bind(_s)($(this).closest(`.${_cls.tagItem}`).data('v')); });
 
     $(document).on('click', function (e) {
       var _target = e.target, _item = $c.find(_target);
@@ -146,12 +155,21 @@ layui.define(['jquery', 'laytpl'], function (e) {
   Cascader.prototype.showLabel = function () {
     var _s = this, _e = this.config.elem, _cls = sys.class, $c = $(_e).next();
 
-    var _labels = _s.getSelectOptions();
+    var _selectedOptions = _s.getSelectOptions();
 
     if (_s.config.multiple) {
-      $c.find(`.${_cls.input}`).val(_labels.map(function (e) { return _s.convertInputText(e); }).join('|'));
+      var $input = $c.find(`.${_cls.input}`), $tags = $c.find(`.${_cls.tags}`), $tagBody = $tags.find(`.${_cls.tagBody}`), _labels = _selectedOptions.map(function (e) { return { label: _s.convertInputText(e), value: _s.convertValue(e) }; });
+      if (_labels.length === 0) {
+        $input.attr('placeholder', _s.config.placeholder), $input.height('')
+        $tags.hide();
+        return;
+      }
+      $tagBody.html(tpl(_s.config.collapseTags ? sys.template.tagsCollapse : sys.template.tags).render({ cls: sys.class, list: _labels }));
+      
+      $input.attr('placeholder', ''), $input.height($tags.height() + 2)
+      $tags.show();
     } else {
-      $c.find(`.${_cls.input}`).val(_s.convertInputText(_labels[0]));
+      $c.find(`.${_cls.input}`).val(_s.convertInputText(_selectedOptions[0]));
     }
   }
 
@@ -224,14 +242,24 @@ layui.define(['jquery', 'laytpl'], function (e) {
     return v.map(function (e) { return e.value; }).join(_s.config.valueSeparator)
   }
 
+  Cascader.prototype.onTagTap = function (v) {
+    var _s = this, _e = this.config.elem, _v = _s.getSelectedValue();
+    var index = _v.indexOf(v);
+    if (index > -1) {
+      _v.splice(index, 1);
+      $(_e).val(_v.join(_s.config.groupSeparator));
+      _s.highlight(), _s.showLabel();
+    }
+  }
+
   Cascader.prototype.onShow = function (e) {
-    var _s = this, _e = this.config.elem, $c = $(_e).next(), _cls = sys.class, $dd = $c.find(`.${_cls.dropdown}`);
+    var _s = this, _e = this.config.elem, $c = $(_e).next(), _cls = sys.class, $input = $c.find(`.${_cls.input}`);
 
     if ($c.find(`.${_cls.inputBox}`).hasClass('focus')) {
       return _s.onClose.bind(_s)(e);
     }
 
-    if (document.body.offsetHeight- e.clientY < 300 && e.clientY > 300) {
+    if (document.body.offsetHeight - ($input.offset().top + $input.height()) < 300 && $input.offset().top > 300) {
       $c.addClass(_cls.selectup);
     }
 
