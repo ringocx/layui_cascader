@@ -23,7 +23,7 @@ layui.define(['jquery', 'laytpl'], function (e) {
     },
     template: {
       main: '<div class="{{d.cls.container}}"><div class="{{d.cls.inputBox}} cascader-input--suffix"><input type="text" readonly placeholder="{{d.opts.placeholder}}" class="{{d.cls.input}} layui-input" /><span class="{{d.cls.inputSuffix}}"><i class="layui-icon layui-icon-triangle-d"></i></span></div><div class="{{d.cls.dropdown}} layui-anim layui-anim-upbit"><div class="{{d.cls.dropdownPanel}}"></div></div>{{# if (d.opts.multiple) { }}<div class="{{d.cls.tags}}"><div class="{{d.cls.tagBody}}"></div></div>{{# } }}</div>',
-      dropdownDl: '<div class="{{d.cls.dropdownDl}}">{{# layui.each(d.list, function(i, e){ }}<div class="{{d.cls.dropdownDd}}" data-v="{{e.value}}"><span>{{e.label}}</span>{{# if (e.children.length > 0) { }}<i class="layui-icon layui-icon-right"></i>{{# } }}<i class="layui-icon layui-icon-ok"></i></div>{{# }); }}</div>',
+      dropdownDl: '<div class="{{d.cls.dropdownDl}}">{{# layui.each(d.list, function(i, e){ }}<div class="{{d.cls.dropdownDd}}" data-v="{{e.value}}"><span>{{e.label}}</span>{{# if (e.hasChildren) { }}<i class="layui-icon layui-icon-right"></i>{{# } }}<i class="layui-icon layui-icon-ok"></i></div>{{# }); }}</div>',
       tags: '{{# layui.each(d.list, function (i, e) { }}<div class="{{d.cls.tagItem}}" data-v="{{e.value}}"><span>{{ e.label }}</span><i class="layui-icon layui-icon-close-fill"></i></div>{{# }); }}',
       tagsCollapse: '<div class="{{d.cls.tagItem}}" data-v="{{d.list[0].value}}"><span>{{d.list[0].label}}</span><i class="layui-icon layui-icon-close-fill"></i></div><div class="{{d.cls.tagItem}} {{d.cls.tagNum}}">+{{d.list.length}}</div>'
     }
@@ -70,7 +70,9 @@ layui.define(['jquery', 'laytpl'], function (e) {
 
     $c.find(`.${_cls.tags}`).on('click', _s.onShow.bind(_s));
 
-    $c.find(`.${_cls.tags}`).on('click', `.${_cls.tagItem} > i`, function (e) { e.stopPropagation(); _s.onTagTap.bind(_s)($(this).closest(`.${_cls.tagItem}`).data('v')); });
+    $c.find(`.${_cls.tags}`).on('click', `.${_cls.tagItem} > i`, function (e) { e.stopPropagation(); _s.onSelect.bind(_s)($(this).closest(`.${_cls.tagItem}`).data('v')); });
+
+    $c.on('click', `.${_cls.dropdownDd}`, function (e) { e.stopPropagation(); _s.onSelect.bind(_s)($(this).data('v')) });
 
     $(document).on('click', function (e) {
       var _target = e.target, _item = $c.find(_target);
@@ -80,69 +82,50 @@ layui.define(['jquery', 'laytpl'], function (e) {
     });
   }
 
-  Cascader.prototype.renderData = function (tree) {
-    var _s = this, _e = this.config.elem, _cls = sys.class, $c = $(_e).next(), $dp = $c.find(`.${_cls.dropdownPanel}`);
-    var _tree = tree;
-    var _data = _s.config.options;
-    if (_tree.length > 0) {
-      _data = _tree.reduce(function (res, e) { 
-        var _selected = res.filter(function (_e, _i) { 
-          return _e[_s.config.props.value] === e.value 
-        });
-        _selected = _selected.length > 0 ? _selected[0] : {};
-        return _selected.hasOwnProperty(_s.config.props.children) ? _selected[_s.config.props.children] : []; 
-      }, _s.config.options);
+  Cascader.prototype.renderData = function (treePath) {
+    var _s = this, _e = this.config.elem, _cls = sys.class, $c = $(_e).next(), $dp = $c.find(`.${_cls.dropdownPanel}`), _options = _s.config.options;
+    if (treePath.length > 0) {
+      _options = _s.getChildren(treePath);
     }
 
     $dp.find(`.${_cls.dropdownDl}`).each(function (i, e) {
-      if (i >= _tree.length) {
+      if (i >= treePath.length) {
         $(e).remove();
       }
     });
     
-    if (_data.length === 0) {
+    if (_options.length === 0) {
       return;
     }
-    _data = _data.map(function (e, i) { 
+
+    var _$ddList = $(tpl(sys.template.dropdownDl).render({ list: _options.map(function (e, i) {
       return { 
         label: e[_s.config.props.label],
-        value: e[_s.config.props.value],
-        children: e[_s.config.props.children] || []
+        value: treePath.concat([e[_s.config.props.value]]).join(_s.config.valueSeparator),
+        hasChildren: e[_s.config.props.children] === undefined ? false : e[_s.config.props.children].length > 0
       }
-    });
-    var _$ddList = $(tpl(sys.template.dropdownDl).render({ list: _data, cls: sys.class }));
+    }), cls: sys.class }));
     _$ddList.appendTo($dp);
-
-    _$ddList.on('click', `.${_cls.dropdownDd}`, function (e) {
-      var _ddValue = $(this).data('v').toString();
-      var _ddSelected = _data.filter(function (e, i) { return _ddValue === e.value.toString(); })[0];
-      var _res = { label: _ddSelected.label, value: _ddSelected.value };
-      var _nTree = _tree.concat([_res]);
-      _s.renderData(_nTree);
-      var index = _nTree.length - 1;
-      if (index < 0) { index = 0; }
-      selected.splice(index, selected.length - index);
-      selected.push(_ddValue);
-      _$ddList.find(`.${_cls.dropdownDd}`).removeClass('active');
-      if (_ddSelected.children.length > 0) {
-        $(this).addClass('active');
-      } else {
-        _s.onSelect(_nTree)
-      }
-      _s.highlight();
-    });
   }
 
   Cascader.prototype.onSelect = function (v) {
     var _s = this, _e = this.config.elem, _cls = sys.class, $c = $(_e).next(), $dp = $c.find(`.${_cls.dropdownPanel}`);
-    var _v = _s.getSelectedValue();
+    var _v = _s.getSelectedValue(), _treePath = (`${v}`.split(_s.config.valueSeparator));
+
+    if (_s.getChildren(_treePath).length > 0) {
+      selected = _treePath;
+      _s.renderData(_treePath);
+      _s.highlight();
+      return;
+    }
+
     if (_s.config.multiple) {
-      var _i = _v.indexOf(_s.convertValue(v));
-      var _val;
+      var _item = _s.getItemByPath(_treePath), _value = _s.convertValue(_item)
+      var _i = _v.indexOf(_value);
       if (_i >= 0) {
         _v.splice(_i, 1)
       } else {
-        _v = _v.concat(_s.convertValue(v));
+        _v = _v.concat(_value);
       }
       $(_e).val(_v.join(_s.config.groupSeparator));
       _s.showLabel();
@@ -150,6 +133,8 @@ layui.define(['jquery', 'laytpl'], function (e) {
       $(_e).val(_s.convertValue(v));
       _s.showLabel(), _s.onClose();
     }
+
+    _s.highlight();
   }
 
   Cascader.prototype.showLabel = function () {
@@ -171,6 +156,41 @@ layui.define(['jquery', 'laytpl'], function (e) {
     } else {
       $c.find(`.${_cls.input}`).val(_s.convertInputText(_selectedOptions[0]));
     }
+  }
+
+  Cascader.prototype.getChildren = function (path) {
+    var _s = this;
+
+    if (!Array.isArray(path)) {
+      path = path.split(_s.config.valueSeparator);
+    }
+
+    return path.reduce(function (res, e) { 
+      var _selected = res.filter(function (_e, _i) { 
+        return _e[_s.config.props.value] === e 
+      });
+      _selected = _selected.length > 0 ? _selected[0] : {};
+      return _selected.hasOwnProperty(_s.config.props.children) ? _selected[_s.config.props.children] : []; 
+    }, _s.config.options)
+  }
+
+  Cascader.prototype.getItemByPath = function (path) {
+    var _s = this, _options = _s.config.options;
+
+    if (!Array.isArray(path)) {
+      path = path.split(_s.config.valueSeparator);
+    }
+
+    return path.reduce(function (res, e) {
+      var restruct = _options.filter(function (_e) {
+        return _e[_s.config.props.value].toString() === e.toString();
+      })
+      if (restruct.length > 0) {
+        res.push(restruct[0]);
+        _options = restruct[0][_s.config.props.children] !== undefined ? restruct[0][_s.config.props.children] : [];
+      }
+      return res
+    }, [])
   }
 
   Cascader.prototype.getSelectOptions = function () {
@@ -204,16 +224,18 @@ layui.define(['jquery', 'laytpl'], function (e) {
       }
       return obj;
     }
-    _v = _v.reduce(function (res, e) {
+    _v = _v.concat(selected.join(_s.config.valueSeparator)).reduce(function (res, e) {
       return _marginObject(e.split(_s.config.valueSeparator), res);
     }, {});
+    
     $dp.find(`.${_cls.dropdownDd}`).removeClass('selected in-active');
     $dp.find(`.${_cls.dropdownDl}`).each(function (i, e) {
       if (_v === undefined) { return; }
       var _keys = Object.keys(_v);
       if (_keys.length > 0) {
         _keys.forEach(function (_e) {
-          $(e).find(`.${_cls.dropdownDd}[data-v="${_e}"]`).addClass(Object.keys(_v[_e]).length > 0 ? (_s.config.multiple ? 'in-active' : '') : 'selected')
+          var _key = selected.slice(0, i).concat(_e).join(_s.config.valueSeparator);
+          $(e).find(`.${_cls.dropdownDd}[data-v="${_key}"]`).addClass(_s.getChildren(_key).length > 0 ? (_s.config.multiple ? 'in-active' : '') : 'selected')
         });
         _v = _v[selected[i]]
       }
@@ -233,23 +255,13 @@ layui.define(['jquery', 'laytpl'], function (e) {
   Cascader.prototype.convertInputText = function (v) {
     var _s = this, _e = this.config.elem, _cls = sys.class, $c = $(_e).next(), $input = $c.find(`.${_cls.input}`);
     return _s.config.showAllLevels 
-      ? v.map(function (e) { return e.label; }).join(` ${_s.config.separator} `)
-      : v[v.length - 1].label;
+      ? v.map(function (e) { return e[_s.config.props.label]; }).join(` ${_s.config.separator} `)
+      : v[v.length - 1][_s.config.props.label];
   }
 
   Cascader.prototype.convertValue = function (v) {
     var _s = this;
-    return v.map(function (e) { return e.value; }).join(_s.config.valueSeparator)
-  }
-
-  Cascader.prototype.onTagTap = function (v) {
-    var _s = this, _e = this.config.elem, _v = _s.getSelectedValue();
-    var index = _v.indexOf(v);
-    if (index > -1) {
-      _v.splice(index, 1);
-      $(_e).val(_v.join(_s.config.groupSeparator));
-      _s.highlight(), _s.showLabel();
-    }
+    return v.map(function (e) { return e[_s.config.props.value]; }).join(_s.config.valueSeparator)
   }
 
   Cascader.prototype.onShow = function (e) {
