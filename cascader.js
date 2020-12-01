@@ -60,7 +60,7 @@ layui.define(['jquery', 'laytpl'], function (e) {
   Cascader.prototype.render = function () {
     var _s = this, _e = this.config.elem;
     $(_e).parent().find(`.${sys.class.container}`).remove(), $(_e).hide().after(tpl(sys.template.main).render({ cls: sys.class, opts: _s.config }));
-    _s.renderData([]), _s.eventRegister();
+    _s.renderData([]), _s.eventRegister(), _s.showLabel();
   }
 
   Cascader.prototype.eventRegister = function () {
@@ -106,6 +106,8 @@ layui.define(['jquery', 'laytpl'], function (e) {
       }
     }), cls: sys.class }));
     _$ddList.appendTo($dp);
+
+    _s.highlight();
   }
 
   Cascader.prototype.onSelect = function (v) {
@@ -295,4 +297,6 @@ layui.define(['jquery', 'laytpl'], function (e) {
       return new Cascader(opts);
     }
   });
+
+  layui.link(layui.cache.base + 'cascader/cascader.css')
 });
