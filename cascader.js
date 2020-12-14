@@ -132,7 +132,7 @@ layui.define(['jquery', 'laytpl'], function (e) {
       $(_e).val(_v.join(_s.config.groupSeparator));
       _s.showLabel();
     } else {
-      $(_e).val(_s.convertValue(v));
+      $(_e).val(_s.convertValue(_s.getItemByPath(_treePath)));
       _s.showLabel(), _s.onClose();
     }
 
@@ -158,7 +158,7 @@ layui.define(['jquery', 'laytpl'], function (e) {
         }, 300);
       });
     } else {
-      $c.find(`.${_cls.input}`).val(_s.convertInputText(_selectedOptions[0]));
+      $c.find(`.${_cls.input}`).val(_s.convertInputText(_selectedOptions ? _selectedOptions[0] : null));
     }
   }
 
@@ -251,12 +251,16 @@ layui.define(['jquery', 'laytpl'], function (e) {
 
   Cascader.prototype.getSelectedValue = function () {
     var _s = this, _e = this.config.elem;
-    return $(_e).val() === "" 
+    var value = $(_e).val() === "" 
       ? []
-      : $(_e).val().split(_s.config.groupSeparator);
+      : $(_e).val().split(_s.config.groupSeparator)
+    return Array.isArray(value) ? value : [value];
   }
 
   Cascader.prototype.convertInputText = function (v) {
+    if (!v) {
+      return '';
+    }
     var _s = this, _e = this.config.elem, _cls = sys.class, $c = $(_e).next(), $input = $c.find(`.${_cls.input}`);
     return _s.config.showAllLevels 
       ? v.map(function (e) { return e[_s.config.props.label]; }).join(` ${_s.config.separator} `)
@@ -265,6 +269,9 @@ layui.define(['jquery', 'laytpl'], function (e) {
 
   Cascader.prototype.convertValue = function (v) {
     var _s = this;
+    if (!Array.isArray(v)) {
+      v = [v];
+    }
     return v.map(function (e) { return e[_s.config.props.value]; }).join(_s.config.valueSeparator)
   }
 
