@@ -72,7 +72,7 @@ layui.define(['jquery', 'laytpl'], function (e) {
 
     $c.find(`.${_cls.tags}`).on('click', `.${_cls.tagItem} > i`, function (e) { e.stopPropagation(); _s.onSelect.bind(_s)($(this).closest(`.${_cls.tagItem}`).data('v')); });
 
-    $c.on('click', `.${_cls.dropdownDd}`, function (e) { e.stopPropagation(); _s.onSelect.bind(_s)($(this).data('v')) });
+    $c.on('click', `.${_cls.dropdownDd}`, function (e) { e.stopPropagation(); _s.onSelect.bind(_s)($(this).data('v'))});
 
     $(document).on('click', function (e) {
       var _target = e.target, _item = $c.find(_target);
@@ -140,21 +140,23 @@ layui.define(['jquery', 'laytpl'], function (e) {
   }
 
   Cascader.prototype.showLabel = function () {
-    var _s = this, _e = this.config.elem, _cls = sys.class, $c = $(_e).next();
+    var _s = this, _e = this.config.elem, _cls = sys.class, $c = $(_e).next(), $tags = $c.find(`.${_cls.tags}`);
 
     var _selectedOptions = _s.getSelectOptions();
 
     if (_s.config.multiple) {
-      var $input = $c.find(`.${_cls.input}`), $tags = $c.find(`.${_cls.tags}`), $tagBody = $tags.find(`.${_cls.tagBody}`), _labels = _selectedOptions.map(function (e) { return { label: _s.convertInputText(e), value: _s.convertValue(e) }; });
+      var $input = $c.find(`.${_cls.input}`), $tagBody = $tags.find(`.${_cls.tagBody}`), _labels = _selectedOptions.map(function (e) { return { label: _s.convertInputText(e), value: _s.convertValue(e) }; });
       if (_labels.length === 0) {
         $input.attr('placeholder', _s.config.placeholder), $input.height('')
         $tags.hide();
         return;
       }
-      $tagBody.html(tpl(_s.config.collapseTags ? sys.template.tagsCollapse : sys.template.tags).render({ cls: sys.class, list: _labels }));
-      
-      $input.attr('placeholder', ''), $input.height($tags.height() + 2)
-      $tags.show();
+      tpl(_s.config.collapseTags ? sys.template.tagsCollapse : sys.template.tags).render({ cls: sys.class, list: _labels }, function (html) {
+        $tagBody.html(html);
+        setTimeout(function () {
+          $input.attr('placeholder', ''), $input.height($tags.height() + 2), $tags.show();
+        }, 300);
+      });
     } else {
       $c.find(`.${_cls.input}`).val(_s.convertInputText(_selectedOptions[0]));
     }
