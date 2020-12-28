@@ -170,8 +170,8 @@ layui.define(['jquery', 'laytpl'], function (e) {
     }
 
     return path.reduce(function (res, e) { 
-      var _selected = res.filter(function (_e, _i) { 
-        return _e[_s.config.props.value] === e 
+      var _selected = res.filter(function (_e, _i) {
+        return _e[_s.config.props.value].toString() === e.toString();
       });
       _selected = _selected.length > 0 ? _selected[0] : {};
       return _selected.hasOwnProperty(_s.config.props.children) ? _selected[_s.config.props.children] : []; 
@@ -187,7 +187,7 @@ layui.define(['jquery', 'laytpl'], function (e) {
 
     return path.reduce(function (res, e) {
       var restruct = _options.filter(function (_e) {
-        return _e[_s.config.props.value].toString() === e.toString();
+        return _e[_s.config.props.value].toString() === e.toString()
       })
       if (restruct.length > 0) {
         res.push(restruct[0]);
