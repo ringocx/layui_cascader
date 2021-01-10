@@ -15,6 +15,7 @@
 ## 配置参数文档（*表示必填）
 *elem：HTMLElement对象，例如：$('input[name=example]')[0]  
 *options：Array 数据  
+onChange: Function(curr, value) curr: 选中值，value：所有值(当multiple为true有效)
 multiple：boolean 是否开启多选，默认 Flase  
 collapseTags：boolean 是否折叠选项（multiple 开启时有效），默认 True  
 showAllLevels: boolean 是否查看所有级名，默认 True  
