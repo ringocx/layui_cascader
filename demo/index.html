@@ -51,6 +51,9 @@
         children: 'children'
       },
       options: JSON.parse(areaTree),
+      onChange (curr, value) {
+        console.log(curr), console.log(value)
+      }
     });
   });
   </script>
