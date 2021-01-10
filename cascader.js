@@ -54,12 +54,16 @@ layui.define(['jquery', 'laytpl'], function (e) {
       value: 'value',
       children: 'children'
     },
-    debounce: 300
+    debounce: 300,
+    onChange: function () {}
   };
 
   Cascader.prototype.render = function () {
     var _s = this, _e = this.config.elem;
     $(_e).parent().find(`.${sys.class.container}`).remove(), $(_e).hide().after(tpl(sys.template.main).render({ cls: sys.class, opts: _s.config }));
+    if (typeof _s.config.onChange !== 'function') {
+      _s.config.onChange = function () {}
+    }
     _s.renderData([]), _s.eventRegister(), _s.showLabel();
   }
 
@@ -111,7 +115,7 @@ layui.define(['jquery', 'laytpl'], function (e) {
   }
 
   Cascader.prototype.onSelect = function (v) {
-    var _s = this, _e = this.config.elem, _cls = sys.class, $c = $(_e).next(), $dp = $c.find(`.${_cls.dropdownPanel}`);
+    var _s = this, _e = _s.config.elem, _cls = sys.class, $c = $(_e).next(), $dp = $c.find(`.${_cls.dropdownPanel}`);
     var _v = _s.getSelectedValue(), _treePath = (`${v}`.split(_s.config.valueSeparator));
 
     if (_s.getChildren(_treePath).length > 0) {
@@ -129,11 +133,11 @@ layui.define(['jquery', 'laytpl'], function (e) {
       } else {
         _v = _v.concat(_value);
       }
-      $(_e).val(_v.join(_s.config.groupSeparator));
-      _s.showLabel();
+      var _elementValue = _v.join(_s.config.groupSeparator);
+      $(_e).val(_elementValue), _s.showLabel(), _s.config.onChange(_value, _elementValue);
     } else {
-      $(_e).val(_s.convertValue(_s.getItemByPath(_treePath)));
-      _s.showLabel(), _s.onClose();
+      var _value = _s.convertValue(_s.getItemByPath(_treePath));
+      $(_e).val(_value), _s.showLabel(), _s.onClose(), _s.config.onChange(_value);
     }
 
     _s.highlight();
