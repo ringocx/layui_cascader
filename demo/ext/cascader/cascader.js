@@ -298,8 +298,6 @@ layui.define(['jquery', 'laytpl'], function (e) {
   Cascader.prototype.onClose = function (e) {
     var _e = this.config.elem, $c = $(_e).next(), _cls = sys.class;
 
-    console.log('onclose')
-
     $c.removeClass(_cls.selectup);
     $c.find(`.${_cls.inputBox}`).removeClass('focus');
   }
