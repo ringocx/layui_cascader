@@ -78,12 +78,14 @@ layui.define(['jquery', 'laytpl'], function (e) {
 
     $c.on('click', `.${_cls.dropdownDd}`, function (e) { e.stopPropagation(); _s.onSelect.bind(_s)($(this).data('v'))});
 
-    $(document).on('click', function (e) {
-      var _target = e.target, _item = $c.find(_target);
-      if ($c.find(_target).length === 0) {
-        _s.onClose.bind(_s)(e);
-      }
-    });
+    $(document).off('click', _s.maskTap.bind(_s)), $(document).on('click', _s.maskTap.bind(_s));
+  }
+
+  Cascader.prototype.maskTap = function (e) {
+    var _s = this, _e = _s.config.elem, $c = $(_e).next(), _target = e.target, _item = $c.find(_target);
+    if (_item.length === 0) {
+      _s.onClose.bind(_s)(e);
+    }
   }
 
   Cascader.prototype.renderData = function (treePath) {
@@ -280,7 +282,7 @@ layui.define(['jquery', 'laytpl'], function (e) {
   }
 
   Cascader.prototype.onShow = function (e) {
-    var _s = this, _e = this.config.elem, $c = $(_e).next(), _cls = sys.class, $input = $c.find(`.${_cls.input}`);
+    var _s = this, _e = this.config.elem, _cls = sys.class, $c = $(_e).next(), $input = $c.find(`.${_cls.input}`);
 
     if ($c.find(`.${_cls.inputBox}`).hasClass('focus')) {
       return _s.onClose.bind(_s)(e);
@@ -295,6 +297,8 @@ layui.define(['jquery', 'laytpl'], function (e) {
 
   Cascader.prototype.onClose = function (e) {
     var _e = this.config.elem, $c = $(_e).next(), _cls = sys.class;
+
+    console.log('onclose')
 
     $c.removeClass(_cls.selectup);
     $c.find(`.${_cls.inputBox}`).removeClass('focus');
