@@ -60,7 +60,7 @@ layui.define(['jquery', 'laytpl'], function (e) {
 
   Cascader.prototype.render = function () {
     var _s = this, _e = this.config.elem;
-    $(_e).parent().find(`.${sys.class.container}`).remove(), $(_e).hide().after(tpl(sys.template.main).render({ cls: sys.class, opts: _s.config }));
+    $(_e).parent().find(`.${sys.class.container}`).remove(), selected = [], $(_e).hide().after(tpl(sys.template.main).render({ cls: sys.class, opts: _s.config }));
     if (typeof _s.config.onChange !== 'function') {
       _s.config.onChange = function () {}
     }

@@ -27,8 +27,9 @@
   <body>
     <div id="app" class="main">
       <div class="rc-cascader">
-        <input type="text" name="areas" value="1000,1368,1398" style="display: none;" />
+        <input type="text" name="areas" value="" style="display: none;" />
       </div>
+      <div id="reload" style="background-color: #000; color: #fff;">reload</div>
     </div>
   </body>
   <script src="./js/layui-v2.5.6/layui/layui.js"></script>
@@ -52,9 +53,27 @@
       },
       options: JSON.parse(areaTree),
       onChange (curr, value) {
-        console.log(curr), console.log(value)
+        console.log(curr, value)
       }
     });
+
+    $('#reload').on('click', function () {
+      $('input[name=areas]').val('')
+      cascader.render({
+        elem: $('input[name=areas]')[0],
+        multiple: true,
+        showAllLevels: true,
+        props: {
+          label: 'province_city',
+          value: 'id',
+          children: 'children'
+        },
+        options: JSON.parse(areaTree),
+        onChange (curr, value) {
+          console.log(curr, value)
+        }
+      });
+    })
   });
   </script>
 </html>
